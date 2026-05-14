@@ -17,6 +17,9 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const dotenv = require('dotenv')
+dotenv.config()
+
 // ─── OpenAI Client ────────────────────────────────────────────────────────────
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // Set via environment variable
@@ -25,7 +28,6 @@ const openai = new OpenAI({
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
-
 // ─── CollectiveIP Knowledge Base ─────────────────────────────────────────────
 const KNOWLEDGE_BASE = `
 COMPANY OVERVIEW

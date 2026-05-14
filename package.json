@@ -1,6 +1,16 @@
 {
-  "dependencies": {
+  "name": "collective-ip-chatbot",
+  "version": "1.0.0",
+  "description": "Collective IP Knowledge Assistant — Express.js chatbot powered by OpenAI",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "openai": "^6.37.0"
   }
