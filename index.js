@@ -1213,730 +1213,723 @@ app.get("/health", (req, res) => {
 });
 
 // ─── Frontend ──────────────────────────────────────────────────────────────────
-app.get("/", (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Collective IP — Knowledge Assistant</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap');
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0d0f14;
-      --surface: #161921;
-      --surface2: #1e2230;
-      --border: #252936;
-      --border-light: #2f3447;
-      --accent: #00c2ff;
-      --accent2: #0077ff;
-      --accent-dim: rgba(0, 119, 255, 0.12);
-      --text: #e8eaf0;
-      --text-mid: #a0a6bc;
-      --text-muted: #6b7090;
-      --user-bg: #0c3260;
-      --user-border: #1a4a80;
-      --bot-bg: #1a1e2a;
-      --advisory-bg: #141820;
-      --advisory-border: #1e3a5f;
-      --radius: 16px;
-      --font: 'DM Sans', sans-serif;
-    }
-
-    html, body { height: 100%; }
-
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* ── Header ── */
-    header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      flex-shrink: 0;
-      position: relative;
-    }
-
-    .logo-mark {
-      width: 38px; height: 38px;
-      background: linear-gradient(135deg, var(--accent2), var(--accent));
-      border-radius: 11px;
-      display: grid; place-items: center;
-      font-weight: 700; font-size: 13px;
-      color: #fff;
-      letter-spacing: -0.5px;
-      flex-shrink: 0;
-    }
-
-    .header-text h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 16px;
-      font-weight: 400;
-      color: var(--text);
-      line-height: 1.2;
-    }
-
-    .header-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 2px;
-    }
-
-    .header-text p {
-      font-size: 11.5px;
-      color: var(--text-muted);
-    }
-
-    .header-badge {
-      font-size: 10px;
-      background: rgba(0,194,255,0.1);
-      color: var(--accent);
-      border: 1px solid rgba(0,194,255,0.2);
-      padding: 2px 7px;
-      border-radius: 99px;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-    }
-
-    .header-right {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .context-indicator {
-      font-size: 11px;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .context-indicator.visible { opacity: 1; }
-    .context-dot {
-      width: 6px; height: 6px;
-      background: #22c55e;
-      border-radius: 50%;
-      box-shadow: 0 0 5px #22c55e88;
-    }
-
-    .status-dot {
-      width: 8px; height: 8px;
-      background: #22c55e;
-      border-radius: 50%;
-      box-shadow: 0 0 6px #22c55e88;
-    }
-
-    /* ── Chat Window ── */
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px 0 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      scroll-behavior: smooth;
-    }
-
-    #chat::-webkit-scrollbar { width: 3px; }
-    #chat::-webkit-scrollbar-track { background: transparent; }
-    #chat::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 99px; }
-
-    /* ── Messages ── */
-    .msg-row {
-      display: flex;
-      flex-direction: column;
-      padding: 4px 24px;
-      animation: fadeUp 0.2s ease;
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .msg-row.user { align-items: flex-end; }
-    .msg-row.bot  { align-items: flex-start; }
-
-    .msg-label {
-      font-size: 10.5px;
-      color: var(--text-muted);
-      margin-bottom: 5px;
-      letter-spacing: 0.3px;
-      font-weight: 500;
-      text-transform: uppercase;
-    }
-
-    .bubble {
-      max-width: 74%;
-      padding: 13px 17px;
-      border-radius: var(--radius);
-      font-size: 14px;
-      line-height: 1.65;
-    }
-
-    .msg-row.user .bubble {
-      background: var(--user-bg);
-      border: 1px solid var(--user-border);
-      border-bottom-right-radius: 5px;
-      color: #c8e6ff;
-    }
-
-    .msg-row.bot .bubble {
-      background: var(--bot-bg);
-      border: 1px solid var(--border-light);
-      border-bottom-left-radius: 5px;
-      color: var(--text);
-    }
-
-    /* Rendered markdown inside bubbles */
-    .bubble h3 {
-      font-size: 13.5px;
-      font-weight: 600;
-      color: var(--accent);
-      margin: 14px 0 5px;
-      letter-spacing: 0.2px;
-    }
-    .bubble h3:first-child { margin-top: 0; }
-
-    .bubble strong { color: #b8d4ff; font-weight: 600; }
-    .bubble em { color: var(--text-mid); font-style: italic; }
-
-    .bubble ul, .bubble ol {
-      padding-left: 18px;
-      margin: 6px 0;
-    }
-    .bubble li {
-      margin-bottom: 4px;
-      color: var(--text);
-    }
-    .bubble li::marker { color: var(--accent); }
-
-    .bubble p { margin-bottom: 9px; }
-    .bubble p:last-child { margin-bottom: 0; }
-
-    .bubble hr {
-      border: none;
-      border-top: 1px solid var(--border-light);
-      margin: 12px 0;
-    }
-
-    /* Advisory callout — highlights the "from an industry perspective" sections */
-    .advisory-block {
-      background: var(--advisory-bg);
-      border-left: 3px solid var(--accent2);
-      border-radius: 0 8px 8px 0;
-      padding: 10px 14px;
-      margin: 10px 0;
-      font-size: 13.5px;
-      color: var(--text-mid);
-    }
-    .advisory-block .advisory-label {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--accent2);
-      margin-bottom: 5px;
-    }
-
-    /* Typing indicator */
-    .typing-row {
-      display: flex;
-      align-items: flex-start;
-      padding: 8px 24px;
-      gap: 10px;
-      animation: fadeUp 0.2s ease;
-    }
-    .typing-bubble {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      background: var(--bot-bg);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius);
-      border-bottom-left-radius: 5px;
-      padding: 13px 17px;
-    }
-    .typing-bubble span {
-      width: 6px; height: 6px;
-      background: var(--text-muted);
-      border-radius: 50%;
-      animation: blink 1.2s ease-in-out infinite;
-    }
-    .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blink {
-      0%, 80%, 100% { transform: scale(0.65); opacity: 0.3; }
-      40%            { transform: scale(1);    opacity: 1;   }
-    }
-
-    /* ── Suggestions ── */
-    #suggestions {
-      padding: 6px 24px 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      flex-shrink: 0;
-    }
-
-    .chip-group-label {
-      width: 100%;
-      font-size: 10.5px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-
-    .suggestion-chip {
-      background: transparent;
-      border: 1px solid var(--border-light);
-      color: var(--text-muted);
-      padding: 6px 13px;
-      border-radius: 99px;
-      font-size: 12px;
-      font-family: var(--font);
-      cursor: pointer;
-      transition: all 0.15s;
-      line-height: 1.4;
-    }
-    .suggestion-chip:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: var(--accent-dim);
-    }
-
-    /* ── Input Area ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 14px 24px 18px;
-      background: var(--surface);
-      flex-shrink: 0;
-    }
-
-    .input-wrap {
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      background: var(--bg);
-      border: 1px solid var(--border-light);
-      border-radius: 14px;
-      padding: 10px 10px 10px 16px;
-      transition: border-color 0.15s;
-    }
-    .input-wrap:focus-within { border-color: var(--accent2); }
-
-    #input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      font-family: var(--font);
-      font-size: 14px;
-      color: var(--text);
-      resize: none;
-      max-height: 110px;
-      line-height: 1.55;
-    }
-    #input::placeholder { color: var(--text-muted); }
-
-    #send-btn {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, var(--accent2), var(--accent));
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      display: grid; place-items: center;
-      flex-shrink: 0;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-    #send-btn:hover { opacity: 0.88; transform: scale(1.05); }
-    #send-btn:active { transform: scale(0.96); }
-    #send-btn svg { width: 16px; height: 16px; fill: white; }
-    #send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-    .footer-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 8px;
-    }
-
-    .footer-hint {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .clear-btn {
-      background: none; border: none;
-      color: var(--text-muted); font-size: 11px;
-      font-family: var(--font);
-      cursor: pointer;
-      transition: color 0.15s;
-    }
-    .clear-btn:hover { color: var(--text-mid); }
-
-    /* ── Welcome screen ── */
-    .welcome {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 40px 24px 28px;
-      gap: 12px;
-    }
-    .welcome-icon {
-      width: 52px; height: 52px;
-      background: linear-gradient(135deg, rgba(0,119,255,0.2), rgba(0,194,255,0.2));
-      border: 1px solid rgba(0,194,255,0.25);
-      border-radius: 16px;
-      display: grid; place-items: center;
-      font-size: 22px;
-      margin-bottom: 4px;
-    }
-    .welcome h2 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 21px;
-      font-weight: 400;
-      color: var(--text);
-    }
-    .welcome p {
-      font-size: 13.5px;
-      color: var(--text-muted);
-      max-width: 400px;
-      line-height: 1.6;
-    }
-    .welcome-pills {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 4px;
-    }
-    .welcome-pill {
-      font-size: 11.5px;
-      color: var(--text-muted);
-      background: var(--surface2);
-      border: 1px solid var(--border-light);
-      padding: 4px 11px;
-      border-radius: 99px;
-    }
-
-    /* Responsive */
-    @media (max-width: 600px) {
-      .bubble { max-width: 90%; font-size: 13.5px; }
-      header { padding: 14px 16px; }
-      #chat { padding: 16px 0 4px; }
-      .msg-row { padding: 4px 16px; }
-      footer { padding: 12px 16px 16px; }
-      #suggestions { padding: 6px 16px 10px; }
-    }
-  </style>
-</head>
-<body>
-
-<header>
-  <div class="logo-mark">CIP</div>
-  <div class="header-text">
-    <h1>Collective IP Assistant</h1>
-    <div class="header-meta">
-      <p>IT Infrastructure &amp; Intelligent Automation</p>
-      <span class="header-badge">Industry Advisor</span>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="context-indicator" id="ctxIndicator">
-      <div class="context-dot"></div>
-      <span>Context active</span>
-    </div>
-    <div class="status-dot" title="Online"></div>
-  </div>
-</header>
-
-<div id="chat">
-  <div class="welcome" id="welcome">
-    <div class="welcome-icon">⚡</div>
-    <h2>How can I help you today?</h2>
-    <p>Ask about Collective IP's services, get practical industry advice, or explore how to approach your project. I remember the full context of our conversation.</p>
-    <div class="welcome-pills">
-      <span class="welcome-pill">CIP Capabilities</span>
-      <span class="welcome-pill">Industry best practice</span>
-      <span class="welcome-pill">Project approach</span>
-      <span class="welcome-pill">Vendor selection</span>
-      <span class="welcome-pill">Risk &amp; watch-outs</span>
-    </div>
-  </div>
-</div>
-
-<div id="suggestions">
-  <div class="chip-group-label">Suggested topics</div>
-  <button class="suggestion-chip" onclick="sendSuggestion(this)">Multi-site wireless — what to watch out for</button>
-  <button class="suggestion-chip" onclick="sendSuggestion(this)">Microsoft Copilot readiness</button>
-  <button class="suggestion-chip" onclick="sendSuggestion(this)">Intelligent automation for MSP operations</button>
-  <button class="suggestion-chip" onclick="sendSuggestion(this)">How CIP works with channel partners</button>
-  <button class="suggestion-chip" onclick="sendSuggestion(this)">Cloud CCTV vendor selection</button>
-  <button class="suggestion-chip" onclick="sendSuggestion(this)">Sales Executive Assistant ROI</button>
-  <button class="suggestion-chip" onclick="sendSuggestion(this)">Purview and Copilot security</button>
-  <button class="suggestion-chip" onclick="sendSuggestion(this)">Critical success factors for network refresh</button>
-</div>
-
-<footer>
-  <div class="input-wrap">
-    <textarea id="input" rows="1" placeholder="Ask anything — CIP services, industry advice, project approach…" maxlength="3000"></textarea>
-    <button id="send-btn" onclick="sendMessage()" title="Send">
-      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-    </button>
-  </div>
-  <div class="footer-meta">
-    <span class="footer-hint">Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line</span>
-    <button class="clear-btn" onclick="clearChat()">✕ Clear conversation</button>
-  </div>
-</footer>
-
-<script>
-  let sessionId = null;
-  let turnCount = 0;
-
-  const chatEl = document.getElementById('chat');
-  const inputEl = document.getElementById('input');
-  const sendBtn = document.getElementById('send-btn');
-  const suggestionsEl = document.getElementById('suggestions');
-  const ctxIndicator = document.getElementById('ctxIndicator');
-
-  // ── Auto-grow textarea ──
-  inputEl.addEventListener('input', () => {
-    inputEl.style.height = 'auto';
-    inputEl.style.height = Math.min(inputEl.scrollHeight, 110) + 'px';
-  });
-
-  inputEl.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  });
-
-  function sendSuggestion(btn) {
-    inputEl.value = btn.textContent.trim();
-    hideSuggestions();
-    sendMessage();
-  }
-
-  function hideSuggestions() {
-    suggestionsEl.style.display = 'none';
-  }
-
-  function scrollToBottom() {
-    chatEl.scrollTo({ top: chatEl.scrollHeight, behavior: 'smooth' });
-  }
-
-  // ── Markdown renderer ──
-  function renderMarkdown(text) {
-    // Sanitise
-    let html = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    // Headers (### and ##)
-    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
-
-    // Bold and italic
-    html = html.replace(/\\*\\*\\*(.+?)\\*\\*\\*/g, '<strong><em>$1</em></strong>');
-    html = html.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');
-    html = html.replace(/\\*(.+?)\\*/g, '<em>$1</em>');
-
-    // Horizontal rule
-    html = html.replace(/^---+$/gm, '<hr>');
-
-    // Advisory callouts — lines starting with "From an industry perspective" etc.
-    // We detect "advisory" paragraphs and wrap them
-    const advisoryTriggers = [
-      'From an industry perspective',
-      'From a delivery perspective',
-      'One thing that often catches',
-      'What experienced',
-      'A common failure',
-      'Worth noting',
-      'Watch-out:',
-      'Critical success',
-      'Industry note:',
-      'Practically speaking',
-    ];
-    // const advisoryPattern = new RegExp(
-    //   '(' + advisoryTriggers.map(t => t.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')).join('|') + ')',
-    //   'gi'
-    // );
-    const advisoryPattern = new RegExp(
-  '(' +
-    advisoryTriggers
-      .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-      .join('|') +
-  ')',
-  'gi'
-);
-
-    // Process line by line for lists and advisory
-    const lines = html.split('\\n');
-    let inUl = false, inOl = false;
-    const processed = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-
-      // Bullet list
-      if (/^[\\-•] (.+)$/.test(line)) {
-        if (!inUl) { processed.push('<ul>'); inUl = true; }
-        if (inOl) { processed.push('</ol>'); inOl = false; }
-        processed.push('<li>' + line.replace(/^[\\-•] /, '') + '</li>');
-        continue;
-      }
-      // Numbered list
-      if (/^\\d+\\.\\s+(.+)$/.test(line)) {
-        if (!inOl) { processed.push('<ol>'); inOl = true; }
-        if (inUl) { processed.push('</ul>'); inUl = false; }
-        processed.push('<li>' + line.replace(/^\\d+\\.\\s+/, '') + '</li>');
-        continue;
-      }
-      // Close open lists
-      if (inUl) { processed.push('</ul>'); inUl = false; }
-      if (inOl) { processed.push('</ol>'); inOl = false; }
-
-      if (line.trim() === '') {
-        processed.push('<br>');
-      } else {
-        processed.push('<p>' + line + '</p>');
-      }
-    }
-    if (inUl) processed.push('</ul>');
-    if (inOl) processed.push('</ol>');
-
-    return processed.join('');
-  }
-
-  function appendMessage(role, text) {
-    const row = document.createElement('div');
-    row.className = 'msg-row ' + role;
-
-    if (role === 'bot') {
-      const label = document.createElement('div');
-      label.className = 'msg-label';
-      label.textContent = 'Collective IP';
-      row.appendChild(label);
-    }
-
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.innerHTML = renderMarkdown(text);
-    row.appendChild(bubble);
-
-    chatEl.appendChild(row);
-    scrollToBottom();
-    return row;
-  }
-
-  function showTyping() {
-    const row = document.createElement('div');
-    row.className = 'typing-row';
-    row.id = 'typing';
-    row.innerHTML = '<div class="typing-bubble"><span></span><span></span><span></span></div>';
-    chatEl.appendChild(row);
-    scrollToBottom();
-  }
-
-  function removeTyping() {
-    document.getElementById('typing')?.remove();
-  }
-
-  async function sendMessage() {
-    const msg = inputEl.value.trim();
-    if (!msg) return;
-
-    // Remove welcome screen
-    document.getElementById('welcome')?.remove();
-    hideSuggestions();
-
-    inputEl.value = '';
-    inputEl.style.height = 'auto';
-    sendBtn.disabled = true;
-
-    appendMessage('user', msg);
-    showTyping();
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, sessionId }),
-      });
-
-      const data = await res.json();
-      removeTyping();
-
-      if (!res.ok) {
-        appendMessage('bot', '⚠️ ' + (data.error || 'Something went wrong. Please try again.'));
-      } else {
-        sessionId = data.sessionId;
-        turnCount = data.turnCount || turnCount + 1;
-        appendMessage('bot', data.reply);
-
-        // Show context active indicator after a couple of turns
-        if (turnCount >= 2) {
-          ctxIndicator.classList.add('visible');
-        }
-      }
-    } catch {
-      removeTyping();
-      appendMessage('bot', '⚠️ Network error. Please check your connection and try again.');
-    } finally {
-      sendBtn.disabled = false;
-      inputEl.focus();
-    }
-  }
-
-  async function clearChat() {
-    if (sessionId) {
-      fetch('/api/chat/' + sessionId, { method: 'DELETE' }).catch(() => {});
-      sessionId = null;
-    }
-    turnCount = 0;
-    ctxIndicator.classList.remove('visible');
-
-    chatEl.innerHTML = \`
-      <div class="welcome" id="welcome">
-        <div class="welcome-icon">⚡</div>
-        <h2>How can I help you today?</h2>
-        <p>Ask about Collective IP's services, get practical industry advice, or explore how to approach your project. I remember the full context of our conversation.</p>
-        <div class="welcome-pills">
-          <span class="welcome-pill">CIP Capabilities</span>
-          <span class="welcome-pill">Industry best practice</span>
-          <span class="welcome-pill">Project approach</span>
-          <span class="welcome-pill">Vendor selection</span>
-          <span class="welcome-pill">Risk &amp; watch-outs</span>
-        </div>
-      </div>\`;
-
-    suggestionsEl.style.display = 'flex';
-  }
-</script>
-</body>
-</html>`);
-});
+// app.get("/", (req, res) => {
+//   res.send(`<!DOCTYPE html>
+// <html lang="en">
+// <head>
+//   <meta charset="UTF-8" />
+//   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+//   <title>Collective IP — Knowledge Assistant</title>
+//   <style>
+//     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap');
+
+//     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+//     :root {
+//       --bg: #0d0f14;
+//       --surface: #161921;
+//       --surface2: #1e2230;
+//       --border: #252936;
+//       --border-light: #2f3447;
+//       --accent: #00c2ff;
+//       --accent2: #0077ff;
+//       --accent-dim: rgba(0, 119, 255, 0.12);
+//       --text: #e8eaf0;
+//       --text-mid: #a0a6bc;
+//       --text-muted: #6b7090;
+//       --user-bg: #0c3260;
+//       --user-border: #1a4a80;
+//       --bot-bg: #1a1e2a;
+//       --advisory-bg: #141820;
+//       --advisory-border: #1e3a5f;
+//       --radius: 16px;
+//       --font: 'DM Sans', sans-serif;
+//     }
+
+//     html, body { height: 100%; }
+
+//     body {
+//       font-family: var(--font);
+//       background: var(--bg);
+//       color: var(--text);
+//       height: 100dvh;
+//       display: flex;
+//       flex-direction: column;
+//       overflow: hidden;
+//     }
+
+//     /* ── Header ── */
+//     header {
+//       display: flex;
+//       align-items: center;
+//       gap: 14px;
+//       padding: 16px 24px;
+//       border-bottom: 1px solid var(--border);
+//       background: var(--surface);
+//       flex-shrink: 0;
+//       position: relative;
+//     }
+
+//     .logo-mark {
+//       width: 38px; height: 38px;
+//       background: linear-gradient(135deg, var(--accent2), var(--accent));
+//       border-radius: 11px;
+//       display: grid; place-items: center;
+//       font-weight: 700; font-size: 13px;
+//       color: #fff;
+//       letter-spacing: -0.5px;
+//       flex-shrink: 0;
+//     }
+
+//     .header-text h1 {
+//       font-family: 'DM Serif Display', serif;
+//       font-size: 16px;
+//       font-weight: 400;
+//       color: var(--text);
+//       line-height: 1.2;
+//     }
+
+//     .header-meta {
+//       display: flex;
+//       align-items: center;
+//       gap: 10px;
+//       margin-top: 2px;
+//     }
+
+//     .header-text p {
+//       font-size: 11.5px;
+//       color: var(--text-muted);
+//     }
+
+//     .header-badge {
+//       font-size: 10px;
+//       background: rgba(0,194,255,0.1);
+//       color: var(--accent);
+//       border: 1px solid rgba(0,194,255,0.2);
+//       padding: 2px 7px;
+//       border-radius: 99px;
+//       font-weight: 500;
+//       letter-spacing: 0.3px;
+//     }
+
+//     .header-right {
+//       margin-left: auto;
+//       display: flex;
+//       align-items: center;
+//       gap: 12px;
+//     }
+
+//     .context-indicator {
+//       font-size: 11px;
+//       color: var(--text-muted);
+//       display: flex;
+//       align-items: center;
+//       gap: 5px;
+//       opacity: 0;
+//       transition: opacity 0.3s;
+//     }
+//     .context-indicator.visible { opacity: 1; }
+//     .context-dot {
+//       width: 6px; height: 6px;
+//       background: #22c55e;
+//       border-radius: 50%;
+//       box-shadow: 0 0 5px #22c55e88;
+//     }
+
+//     .status-dot {
+//       width: 8px; height: 8px;
+//       background: #22c55e;
+//       border-radius: 50%;
+//       box-shadow: 0 0 6px #22c55e88;
+//     }
+
+//     /* ── Chat Window ── */
+//     #chat {
+//       flex: 1;
+//       overflow-y: auto;
+//       padding: 24px 0 8px;
+//       display: flex;
+//       flex-direction: column;
+//       gap: 4px;
+//       scroll-behavior: smooth;
+//     }
+
+//     #chat::-webkit-scrollbar { width: 3px; }
+//     #chat::-webkit-scrollbar-track { background: transparent; }
+//     #chat::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 99px; }
+
+//     /* ── Messages ── */
+//     .msg-row {
+//       display: flex;
+//       flex-direction: column;
+//       padding: 4px 24px;
+//       animation: fadeUp 0.2s ease;
+//     }
+//     @keyframes fadeUp {
+//       from { opacity: 0; transform: translateY(6px); }
+//       to   { opacity: 1; transform: translateY(0); }
+//     }
+
+//     .msg-row.user { align-items: flex-end; }
+//     .msg-row.bot  { align-items: flex-start; }
+
+//     .msg-label {
+//       font-size: 10.5px;
+//       color: var(--text-muted);
+//       margin-bottom: 5px;
+//       letter-spacing: 0.3px;
+//       font-weight: 500;
+//       text-transform: uppercase;
+//     }
+
+//     .bubble {
+//       max-width: 74%;
+//       padding: 13px 17px;
+//       border-radius: var(--radius);
+//       font-size: 14px;
+//       line-height: 1.65;
+//     }
+
+//     .msg-row.user .bubble {
+//       background: var(--user-bg);
+//       border: 1px solid var(--user-border);
+//       border-bottom-right-radius: 5px;
+//       color: #c8e6ff;
+//     }
+
+//     .msg-row.bot .bubble {
+//       background: var(--bot-bg);
+//       border: 1px solid var(--border-light);
+//       border-bottom-left-radius: 5px;
+//       color: var(--text);
+//     }
+
+//     /* Rendered markdown inside bubbles */
+//     .bubble h3 {
+//       font-size: 13.5px;
+//       font-weight: 600;
+//       color: var(--accent);
+//       margin: 14px 0 5px;
+//       letter-spacing: 0.2px;
+//     }
+//     .bubble h3:first-child { margin-top: 0; }
+
+//     .bubble strong { color: #b8d4ff; font-weight: 600; }
+//     .bubble em { color: var(--text-mid); font-style: italic; }
+
+//     .bubble ul, .bubble ol {
+//       padding-left: 18px;
+//       margin: 6px 0;
+//     }
+//     .bubble li {
+//       margin-bottom: 4px;
+//       color: var(--text);
+//     }
+//     .bubble li::marker { color: var(--accent); }
+
+//     .bubble p { margin-bottom: 9px; }
+//     .bubble p:last-child { margin-bottom: 0; }
+
+//     .bubble hr {
+//       border: none;
+//       border-top: 1px solid var(--border-light);
+//       margin: 12px 0;
+//     }
+
+//     /* Advisory callout — highlights the "from an industry perspective" sections */
+//     .advisory-block {
+//       background: var(--advisory-bg);
+//       border-left: 3px solid var(--accent2);
+//       border-radius: 0 8px 8px 0;
+//       padding: 10px 14px;
+//       margin: 10px 0;
+//       font-size: 13.5px;
+//       color: var(--text-mid);
+//     }
+//     .advisory-block .advisory-label {
+//       font-size: 10px;
+//       font-weight: 600;
+//       text-transform: uppercase;
+//       letter-spacing: 0.8px;
+//       color: var(--accent2);
+//       margin-bottom: 5px;
+//     }
+
+//     /* Typing indicator */
+//     .typing-row {
+//       display: flex;
+//       align-items: flex-start;
+//       padding: 8px 24px;
+//       gap: 10px;
+//       animation: fadeUp 0.2s ease;
+//     }
+//     .typing-bubble {
+//       display: flex;
+//       align-items: center;
+//       gap: 5px;
+//       background: var(--bot-bg);
+//       border: 1px solid var(--border-light);
+//       border-radius: var(--radius);
+//       border-bottom-left-radius: 5px;
+//       padding: 13px 17px;
+//     }
+//     .typing-bubble span {
+//       width: 6px; height: 6px;
+//       background: var(--text-muted);
+//       border-radius: 50%;
+//       animation: blink 1.2s ease-in-out infinite;
+//     }
+//     .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+//     .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+//     @keyframes blink {
+//       0%, 80%, 100% { transform: scale(0.65); opacity: 0.3; }
+//       40%            { transform: scale(1);    opacity: 1;   }
+//     }
+
+//     /* ── Suggestions ── */
+//     #suggestions {
+//       padding: 6px 24px 12px;
+//       display: flex;
+//       flex-wrap: wrap;
+//       gap: 7px;
+//       flex-shrink: 0;
+//     }
+
+//     .chip-group-label {
+//       width: 100%;
+//       font-size: 10.5px;
+//       color: var(--text-muted);
+//       text-transform: uppercase;
+//       letter-spacing: 0.5px;
+//       font-weight: 500;
+//       margin-bottom: 2px;
+//     }
+
+//     .suggestion-chip {
+//       background: transparent;
+//       border: 1px solid var(--border-light);
+//       color: var(--text-muted);
+//       padding: 6px 13px;
+//       border-radius: 99px;
+//       font-size: 12px;
+//       font-family: var(--font);
+//       cursor: pointer;
+//       transition: all 0.15s;
+//       line-height: 1.4;
+//     }
+//     .suggestion-chip:hover {
+//       border-color: var(--accent);
+//       color: var(--accent);
+//       background: var(--accent-dim);
+//     }
+
+//     /* ── Input Area ── */
+//     footer {
+//       border-top: 1px solid var(--border);
+//       padding: 14px 24px 18px;
+//       background: var(--surface);
+//       flex-shrink: 0;
+//     }
+
+//     .input-wrap {
+//       display: flex;
+//       gap: 10px;
+//       align-items: flex-end;
+//       background: var(--bg);
+//       border: 1px solid var(--border-light);
+//       border-radius: 14px;
+//       padding: 10px 10px 10px 16px;
+//       transition: border-color 0.15s;
+//     }
+//     .input-wrap:focus-within { border-color: var(--accent2); }
+
+//     #input {
+//       flex: 1;
+//       background: transparent;
+//       border: none;
+//       outline: none;
+//       font-family: var(--font);
+//       font-size: 14px;
+//       color: var(--text);
+//       resize: none;
+//       max-height: 110px;
+//       line-height: 1.55;
+//     }
+//     #input::placeholder { color: var(--text-muted); }
+
+//     #send-btn {
+//       width: 36px; height: 36px;
+//       background: linear-gradient(135deg, var(--accent2), var(--accent));
+//       border: none;
+//       border-radius: 10px;
+//       cursor: pointer;
+//       display: grid; place-items: center;
+//       flex-shrink: 0;
+//       transition: opacity 0.15s, transform 0.1s;
+//     }
+//     #send-btn:hover { opacity: 0.88; transform: scale(1.05); }
+//     #send-btn:active { transform: scale(0.96); }
+//     #send-btn svg { width: 16px; height: 16px; fill: white; }
+//     #send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+//     .footer-meta {
+//       display: flex;
+//       justify-content: space-between;
+//       align-items: center;
+//       margin-top: 8px;
+//     }
+
+//     .footer-hint {
+//       font-size: 11px;
+//       color: var(--text-muted);
+//     }
+
+//     .clear-btn {
+//       background: none; border: none;
+//       color: var(--text-muted); font-size: 11px;
+//       font-family: var(--font);
+//       cursor: pointer;
+//       transition: color 0.15s;
+//     }
+//     .clear-btn:hover { color: var(--text-mid); }
+
+//     /* ── Welcome screen ── */
+//     .welcome {
+//       display: flex;
+//       flex-direction: column;
+//       align-items: center;
+//       text-align: center;
+//       padding: 40px 24px 28px;
+//       gap: 12px;
+//     }
+//     .welcome-icon {
+//       width: 52px; height: 52px;
+//       background: linear-gradient(135deg, rgba(0,119,255,0.2), rgba(0,194,255,0.2));
+//       border: 1px solid rgba(0,194,255,0.25);
+//       border-radius: 16px;
+//       display: grid; place-items: center;
+//       font-size: 22px;
+//       margin-bottom: 4px;
+//     }
+//     .welcome h2 {
+//       font-family: 'DM Serif Display', serif;
+//       font-size: 21px;
+//       font-weight: 400;
+//       color: var(--text);
+//     }
+//     .welcome p {
+//       font-size: 13.5px;
+//       color: var(--text-muted);
+//       max-width: 400px;
+//       line-height: 1.6;
+//     }
+//     .welcome-pills {
+//       display: flex;
+//       flex-wrap: wrap;
+//       justify-content: center;
+//       gap: 8px;
+//       margin-top: 4px;
+//     }
+//     .welcome-pill {
+//       font-size: 11.5px;
+//       color: var(--text-muted);
+//       background: var(--surface2);
+//       border: 1px solid var(--border-light);
+//       padding: 4px 11px;
+//       border-radius: 99px;
+//     }
+
+//     /* Responsive */
+//     @media (max-width: 600px) {
+//       .bubble { max-width: 90%; font-size: 13.5px; }
+//       header { padding: 14px 16px; }
+//       #chat { padding: 16px 0 4px; }
+//       .msg-row { padding: 4px 16px; }
+//       footer { padding: 12px 16px 16px; }
+//       #suggestions { padding: 6px 16px 10px; }
+//     }
+//   </style>
+// </head>
+// <body>
+
+// <header>
+//   <div class="logo-mark">CIP</div>
+//   <div class="header-text">
+//     <h1>Collective IP Assistant</h1>
+//     <div class="header-meta">
+//       <p>IT Infrastructure &amp; Intelligent Automation</p>
+//       <span class="header-badge">Industry Advisor</span>
+//     </div>
+//   </div>
+//   <div class="header-right">
+//     <div class="context-indicator" id="ctxIndicator">
+//       <div class="context-dot"></div>
+//       <span>Context active</span>
+//     </div>
+//     <div class="status-dot" title="Online"></div>
+//   </div>
+// </header>
+
+// <div id="chat">
+//   <div class="welcome" id="welcome">
+//     <div class="welcome-icon">⚡</div>
+//     <h2>How can I help you today?</h2>
+//     <p>Ask about Collective IP's services, get practical industry advice, or explore how to approach your project. I remember the full context of our conversation.</p>
+//     <div class="welcome-pills">
+//       <span class="welcome-pill">CIP Capabilities</span>
+//       <span class="welcome-pill">Industry best practice</span>
+//       <span class="welcome-pill">Project approach</span>
+//       <span class="welcome-pill">Vendor selection</span>
+//       <span class="welcome-pill">Risk &amp; watch-outs</span>
+//     </div>
+//   </div>
+// </div>
+
+// <div id="suggestions">
+//   <div class="chip-group-label">Suggested topics</div>
+//   <button class="suggestion-chip" onclick="sendSuggestion(this)">Multi-site wireless — what to watch out for</button>
+//   <button class="suggestion-chip" onclick="sendSuggestion(this)">Microsoft Copilot readiness</button>
+//   <button class="suggestion-chip" onclick="sendSuggestion(this)">Intelligent automation for MSP operations</button>
+//   <button class="suggestion-chip" onclick="sendSuggestion(this)">How CIP works with channel partners</button>
+//   <button class="suggestion-chip" onclick="sendSuggestion(this)">Cloud CCTV vendor selection</button>
+//   <button class="suggestion-chip" onclick="sendSuggestion(this)">Sales Executive Assistant ROI</button>
+//   <button class="suggestion-chip" onclick="sendSuggestion(this)">Purview and Copilot security</button>
+//   <button class="suggestion-chip" onclick="sendSuggestion(this)">Critical success factors for network refresh</button>
+// </div>
+
+// <footer>
+//   <div class="input-wrap">
+//     <textarea id="input" rows="1" placeholder="Ask anything — CIP services, industry advice, project approach…" maxlength="3000"></textarea>
+//     <button id="send-btn" onclick="sendMessage()" title="Send">
+//       <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+//     </button>
+//   </div>
+//   <div class="footer-meta">
+//     <span class="footer-hint">Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line</span>
+//     <button class="clear-btn" onclick="clearChat()">✕ Clear conversation</button>
+//   </div>
+// </footer>
+
+// <script>
+//   let sessionId = null;
+//   let turnCount = 0;
+
+//   const chatEl = document.getElementById('chat');
+//   const inputEl = document.getElementById('input');
+//   const sendBtn = document.getElementById('send-btn');
+//   const suggestionsEl = document.getElementById('suggestions');
+//   const ctxIndicator = document.getElementById('ctxIndicator');
+
+//   // ── Auto-grow textarea ──
+//   inputEl.addEventListener('input', () => {
+//     inputEl.style.height = 'auto';
+//     inputEl.style.height = Math.min(inputEl.scrollHeight, 110) + 'px';
+//   });
+
+//   inputEl.addEventListener('keydown', e => {
+//     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+//   });
+
+//   function sendSuggestion(btn) {
+//     inputEl.value = btn.textContent.trim();
+//     hideSuggestions();
+//     sendMessage();
+//   }
+
+//   function hideSuggestions() {
+//     suggestionsEl.style.display = 'none';
+//   }
+
+//   function scrollToBottom() {
+//     chatEl.scrollTo({ top: chatEl.scrollHeight, behavior: 'smooth' });
+//   }
+
+//   // ── Markdown renderer ──
+//   function renderMarkdown(text) {
+//     // Sanitise
+//     let html = text
+//       .replace(/&/g, '&amp;')
+//       .replace(/</g, '&lt;')
+//       .replace(/>/g, '&gt;');
+
+//     // Headers (### and ##)
+//     html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+//     html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+
+//     // Bold and italic
+//     html = html.replace(/\\*\\*\\*(.+?)\\*\\*\\*/g, '<strong><em>$1</em></strong>');
+//     html = html.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');
+//     html = html.replace(/\\*(.+?)\\*/g, '<em>$1</em>');
+
+//     // Horizontal rule
+//     html = html.replace(/^---+$/gm, '<hr>');
+
+//     // Advisory callouts — lines starting with "From an industry perspective" etc.
+//     // We detect "advisory" paragraphs and wrap them
+//     const advisoryTriggers = [
+//       'From an industry perspective',
+//       'From a delivery perspective',
+//       'One thing that often catches',
+//       'What experienced',
+//       'A common failure',
+//       'Worth noting',
+//       'Watch-out:',
+//       'Critical success',
+//       'Industry note:',
+//       'Practically speaking',
+//     ];
+//     const advisoryPattern = new RegExp(
+//       '(' + advisoryTriggers.map(t => t.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')).join('|') + ')',
+//       'gi'
+//     );
+   
+
+//     // Process line by line for lists and advisory
+//     const lines = html.split('\\n');
+//     let inUl = false, inOl = false;
+//     const processed = [];
+
+//     for (let i = 0; i < lines.length; i++) {
+//       let line = lines[i];
+
+//       // Bullet list
+//       if (/^[\\-•] (.+)$/.test(line)) {
+//         if (!inUl) { processed.push('<ul>'); inUl = true; }
+//         if (inOl) { processed.push('</ol>'); inOl = false; }
+//         processed.push('<li>' + line.replace(/^[\\-•] /, '') + '</li>');
+//         continue;
+//       }
+//       // Numbered list
+//       if (/^\\d+\\.\\s+(.+)$/.test(line)) {
+//         if (!inOl) { processed.push('<ol>'); inOl = true; }
+//         if (inUl) { processed.push('</ul>'); inUl = false; }
+//         processed.push('<li>' + line.replace(/^\\d+\\.\\s+/, '') + '</li>');
+//         continue;
+//       }
+//       // Close open lists
+//       if (inUl) { processed.push('</ul>'); inUl = false; }
+//       if (inOl) { processed.push('</ol>'); inOl = false; }
+
+//       if (line.trim() === '') {
+//         processed.push('<br>');
+//       } else {
+//         processed.push('<p>' + line + '</p>');
+//       }
+//     }
+//     if (inUl) processed.push('</ul>');
+//     if (inOl) processed.push('</ol>');
+
+//     return processed.join('');
+//   }
+
+//   function appendMessage(role, text) {
+//     const row = document.createElement('div');
+//     row.className = 'msg-row ' + role;
+
+//     if (role === 'bot') {
+//       const label = document.createElement('div');
+//       label.className = 'msg-label';
+//       label.textContent = 'Collective IP';
+//       row.appendChild(label);
+//     }
+
+//     const bubble = document.createElement('div');
+//     bubble.className = 'bubble';
+//     bubble.innerHTML = renderMarkdown(text);
+//     row.appendChild(bubble);
+
+//     chatEl.appendChild(row);
+//     scrollToBottom();
+//     return row;
+//   }
+
+//   function showTyping() {
+//     const row = document.createElement('div');
+//     row.className = 'typing-row';
+//     row.id = 'typing';
+//     row.innerHTML = '<div class="typing-bubble"><span></span><span></span><span></span></div>';
+//     chatEl.appendChild(row);
+//     scrollToBottom();
+//   }
+
+//   function removeTyping() {
+//     document.getElementById('typing')?.remove();
+//   }
+
+//   async function sendMessage() {
+//     const msg = inputEl.value.trim();
+//     if (!msg) return;
+
+//     // Remove welcome screen
+//     document.getElementById('welcome')?.remove();
+//     hideSuggestions();
+
+//     inputEl.value = '';
+//     inputEl.style.height = 'auto';
+//     sendBtn.disabled = true;
+
+//     appendMessage('user', msg);
+//     showTyping();
+
+//     try {
+//       const res = await fetch('/api/chat', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ message: msg, sessionId }),
+//       });
+
+//       const data = await res.json();
+//       removeTyping();
+
+//       if (!res.ok) {
+//         appendMessage('bot', '⚠️ ' + (data.error || 'Something went wrong. Please try again.'));
+//       } else {
+//         sessionId = data.sessionId;
+//         turnCount = data.turnCount || turnCount + 1;
+//         appendMessage('bot', data.reply);
+
+//         // Show context active indicator after a couple of turns
+//         if (turnCount >= 2) {
+//           ctxIndicator.classList.add('visible');
+//         }
+//       }
+//     } catch {
+//       removeTyping();
+//       appendMessage('bot', '⚠️ Network error. Please check your connection and try again.');
+//     } finally {
+//       sendBtn.disabled = false;
+//       inputEl.focus();
+//     }
+//   }
+
+//   async function clearChat() {
+//     if (sessionId) {
+//       fetch('/api/chat/' + sessionId, { method: 'DELETE' }).catch(() => {});
+//       sessionId = null;
+//     }
+//     turnCount = 0;
+//     ctxIndicator.classList.remove('visible');
+
+//     chatEl.innerHTML = \`
+//       <div class="welcome" id="welcome">
+//         <div class="welcome-icon">⚡</div>
+//         <h2>How can I help you today?</h2>
+//         <p>Ask about Collective IP's services, get practical industry advice, or explore how to approach your project. I remember the full context of our conversation.</p>
+//         <div class="welcome-pills">
+//           <span class="welcome-pill">CIP Capabilities</span>
+//           <span class="welcome-pill">Industry best practice</span>
+//           <span class="welcome-pill">Project approach</span>
+//           <span class="welcome-pill">Vendor selection</span>
+//           <span class="welcome-pill">Risk &amp; watch-outs</span>
+//         </div>
+//       </div>\`;
+
+//     suggestionsEl.style.display = 'flex';
+//   }
+// </script>
+// </body>
+// </html>`);
+// });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
