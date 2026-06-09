@@ -1778,10 +1778,18 @@ app.get("/", (req, res) => {
       'Industry note:',
       'Practically speaking',
     ];
+    // const advisoryPattern = new RegExp(
+    //   '(' + advisoryTriggers.map(t => t.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')).join('|') + ')',
+    //   'gi'
+    // );
     const advisoryPattern = new RegExp(
-      '(' + advisoryTriggers.map(t => t.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')).join('|') + ')',
-      'gi'
-    );
+  '(' +
+    advisoryTriggers
+      .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('|') +
+  ')',
+  'gi'
+);
 
     // Process line by line for lists and advisory
     const lines = html.split('\\n');
