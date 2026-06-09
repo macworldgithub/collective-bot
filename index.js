@@ -1933,10 +1933,13 @@ app.get("/health", (req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(\`\n✅  Collective IP Knowledge Assistant (v2) running\`);
-  console.log(\`   → http://localhost:\${PORT}\`);
-  console.log(\`   → Chat API: POST http://localhost:\${PORT}/api/chat\`);
+  console.log(`\n✅  Collective IP Knowledge Assistant (v2) running`);
+  console.log(`   → http://localhost:${PORT}`);
+  console.log(`   → Chat API: POST http://localhost:${PORT}/api/chat`);
+
   if (!process.env.OPENAI_API_KEY) {
-    console.warn(\`\n⚠️  WARNING: OPENAI_API_KEY not set. Run: export OPENAI_API_KEY=sk-...\`);
+    console.warn(
+      `\n⚠️  WARNING: OPENAI_API_KEY not set. Run: export OPENAI_API_KEY=sk-...`
+    );
   }
 });
